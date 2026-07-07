@@ -31,6 +31,8 @@ map("n", "<C-l>", "<C-w>l", { desc = "Focus split right" })
 map("v", "<", "<gv", { desc = "Indent left, keep selection" })
 map("v", ">", ">gv", { desc = "Indent right, keep selection" })
 
+map("n", "<leader>fr", ":!open -R %<CR>", { desc = "Reveal in Finder" })
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   vim.fn.system({
@@ -93,7 +95,18 @@ require("lazy").setup({
       local telescope = require("telescope")
       telescope.setup({
         defaults = {
-          file_ignore_patterns = { "node_modules", "%.git/" }
+          file_ignore_patterns = { "node_modules", "%.git/" },
+          preview = {
+            treesitter = false,
+          },
+        },
+        pickers = {
+          buffers = {
+            mappings = {
+              n = { ["dd"] = require("telescope.actions").delete_buffer },
+              i = { ["<C-d>"] = require("telescope.actions").delete_buffer },
+            },
+          },
         },
       })
       pcall(telescope.load_extension, "fzf")
@@ -182,6 +195,50 @@ require("lazy").setup({
         { "<leader>c", group = "Code" },
       },
     },
+  },
+  {
+    "lewis6991/gitsigns.nvim",
+    event = "VeryLazy",
+    opts = {
+      current_line_blame = true,
+      current_line_blame_opts = {
+        delay = 0,
+        virt_text_pos = "right_align",
+      },
+      current_line_blame_formatter = "<author>, <author_time:%b %-d, %Y>",
+    },
+  },
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    cmd = "Neotree",
+    keys = {
+      { "<leader>e", "<cmd>Neotree toggle<CR>", desc = "File [E]xplorer toggle" },
+    },
+    opts = {
+      filesystem = {
+        follow_current_file = { enabled = true },
+        use_libuv_file_watcher = true,
+        filtered_items = {
+          visible = true,
+          hide_dotfiles = false,
+          hide_gitignored = false,
+        },
+      },
+    },
+  },
+  {
+    "nvim-flutter/flutter-tools.nvim",
+    lazy = false,
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("flutter-tools").setup({})
+    end,
   },
 })
 
