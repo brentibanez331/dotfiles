@@ -8,6 +8,15 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.termguicolors = true
 vim.opt.clipboard = "unnamedplus"
+
+if vim.env.SSH_TTY then
+  local osc52 = require("vim.ui.clipboard.osc52")
+  vim.g.clipboard = {
+    name = "OSC 52",
+    copy = { ["+"] = osc52.copy("+"), ["*"] = osc52.copy("*") },
+    paste = { ["+"] = osc52.paste("+"), ["*"] = osc52.paste("*") },
+  }
+end
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 2
 vim.opt.signcolumn = "yes"
@@ -31,7 +40,9 @@ map("n", "<C-l>", "<C-w>l", { desc = "Focus split right" })
 map("v", "<", "<gv", { desc = "Indent left, keep selection" })
 map("v", ">", ">gv", { desc = "Indent right, keep selection" })
 
-map("n", "<leader>fr", ":!open -R %<CR>", { desc = "Reveal in Finder" })
+if vim.fn.has("mac") == 1 then
+  map("n", "<leader>fr", ":!open -R %<CR>", { desc = "Reveal in Finder" })
+end
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
@@ -206,6 +217,17 @@ require("lazy").setup({
         virt_text_pos = "right_align",
       },
       current_line_blame_formatter = "<author>, <author_time:%b %-d, %Y>",
+      on_attach = function(bufnr)
+        local gs = require("gitsigns")
+        local function map(l, r, desc)
+          vim.keymap.set("n", l, r, { buffer = bufnr, desc = desc })
+        end
+        map("<leader>hp", gs.preview_hunk,              "[H]unk [P]review (diff popup)")
+        map("<leader>hi", gs.preview_hunk_inline,       "[H]unk preview [I]nline")
+        map("<leader>hd", gs.diffthis,                  "[H]unk [D]iff whole file")
+        map("]c", function() gs.nav_hunk("next") end, "Next change")
+        map("[c", function() gs.nav_hunk("prev") end, "Prev change")
+      end,
     },
   },
   {
